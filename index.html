@@ -33,7 +33,7 @@ async function upload() {
     let data = await res.json();
     alert(JSON.stringify(data));  
  
-    document.getElementById("result").innerText = data.result;
+    document.getElementById("result").innerText = data.result || JSON.stringify(data);
 
     alert("Uploaded & Searched ✅");
 }

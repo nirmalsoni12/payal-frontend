@@ -26,11 +26,13 @@ async function upload() {
     form.append("file", file);
 
     let res = await fetch(API + "/search", {
-        method: "POST",
-        body: form
+    method: "POST",
+    body: form
     });
 
     let data = await res.json();
+    alert(JSON.stringify(data));  
+ 
     document.getElementById("result").innerText = data.result;
 
     alert("Uploaded & Searched ✅");

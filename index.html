@@ -1,30 +1,40 @@
 <!DOCTYPE html>
 <html>
-<body style="font-family:sans-serif; text-align:center">
+<head>
+  <title>Payal AI Search</title>
+</head>
+<body>
 
-<h1>💎 Payal System</h1>
+<h2>Upload Design</h2>
+<input type="file" id="file">
+<button onclick="upload()">Upload</button>
 
-<h3>Search Design</h3>
-<input id="design" placeholder="Design ID">
+<h2>Search</h2>
 <button onclick="search()">Search</button>
 
-<div id="result"></div>
+<p id="result"></p>
 
 <script>
-const API = "http://127.0.0.1:8000";
+const API = "https://YOUR-RENDER-URL";
 
-async function search() {
-  let id = document.getElementById("design").value;
-  let res = await fetch(API + "/search/" + id);
-  let data = await res.json();
-  let html = "";
-  data.items.forEach(i => {
-    html += `<p>Tag: ${i[0]} | Stock: ${i[2]} | Price: ₹${i[3]}</p>`;
+async function upload() {
+  let file = document.getElementById("file").files[0];
+  let form = new FormData();
+  form.append("file", file);
+
+  await fetch(API + "/upload", {
+    method: "POST",
+    body: form
   });
 
-document.getElementById("result").innerHTML = html;
+  alert("Uploaded");
 }
-                  
+
+async function search() {
+  let res = await fetch(API + "/search");
+  let data = await res.json();
+  document.getElementById("result").innerText = data.result;
+}
 </script>
 
 </body>

@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payal AI Search</title>
+<title>Payal AI Search</title>
 </head>
 <body>
 
 <h2>Upload Design</h2>
 <input type="file" id="file">
-<button onclick="upload()">Upload</button>
-
-<h2>Search</h2>
-<button onclick="search()">Search</button>
+<button onclick="upload()">Upload & Search</button>
 
 <p id="result"></p>
 
@@ -18,20 +15,13 @@
 const API = "https://payal-backend.onrender.com";
 
 async function upload() {
-  let file = document.getElementById("file").files[0];
-  let form = new FormData();
-  form.append("file", file);
-
-  await fetch(API + "/search", {
-    method: "POST",
-    body: form
-  });
-
-  alert("Uploaded");
-}
-
-async function search() {
     let file = document.getElementById("file").files[0];
+
+    if (!file) {
+        alert("File select kar pehle");
+        return;
+    }
+
     let form = new FormData();
     form.append("file", file);
 
@@ -42,6 +32,8 @@ async function search() {
 
     let data = await res.json();
     document.getElementById("result").innerText = data.result;
+
+    alert("Uploaded & Searched ✅");
 }
 </script>
 

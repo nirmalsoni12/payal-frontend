@@ -10,7 +10,6 @@
 <button onclick="upload()">Upload & Search</button>
 
 <p id="result"></p>
-
 <script>
 const API = "https://payal-backend.onrender.com";
 
@@ -26,18 +25,15 @@ async function upload() {
     form.append("file", file);
 
     let res = await fetch(API + "/search", {
-    method: "POST",
-    body: form
+        method: "POST",
+        body: form
     });
 
     let data = await res.json();
-    alert(JSON.stringify(data));  
- 
-    document.getElementById("result").innerText = data.result || JSON.stringify(data);
 
-    alert("Uploaded & Searched ✅");
+    document.getElementById("result").innerText =
+        data.result || JSON.stringify(data);
 }
 </script>
-
 </body>
 </html>

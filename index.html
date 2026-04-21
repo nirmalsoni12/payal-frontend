@@ -32,8 +32,9 @@ async function upload() {
     let data = await res.json();
 
     document.getElementById("result").innerText =
-        data.result || JSON.stringify(data);
+    "Match: " + data.match + " | Score: " + data.score;
 }
+
 </script>
 </body>
 </html>

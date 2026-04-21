@@ -1,15 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Payal AI Search</title>
+<title>AI Search</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+    padding: 40px;
+}
+.box {
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 15px;
+    width: 300px;
+    margin: auto;
+}
+button {
+    background: #22c55e;
+    border: none;
+    padding: 10px 20px;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+}
+</style>
+
 </head>
 <body>
 
-<h2>Upload Design</h2>
-<input type="file" id="file">
-<button onclick="upload()">Upload & Search</button>
+<div class="box">
+<h2>AI Image Search 🔥</h2>
+
+<input type="file" id="file"><br><br>
+<button onclick="upload()">Upload</button>
 
 <p id="result"></p>
+</div>
+
 <script>
 const API = "https://payal-backend.onrender.com";
 
@@ -17,7 +47,7 @@ async function upload() {
     let file = document.getElementById("file").files[0];
 
     if (!file) {
-        alert("File select kar pehle");
+        alert("Select file first");
         return;
     }
 
@@ -31,10 +61,9 @@ async function upload() {
 
     let data = await res.json();
 
-    document.getElementById("result").innerText =
-    "Match: " + data.match + " | Score: " + data.score;
+    document.getElementById("result").innerText = data.result;
 }
-
 </script>
+
 </body>
 </html>

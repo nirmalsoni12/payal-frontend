@@ -68,15 +68,14 @@ async function upload() {
 
     let data = await res.json();
 
-    document.getElementById("result").innerText =
-      "✅ File: " + data.filename +
-      "\n📦 Size: " + data.size +
-      "\n🚀 " + data.message;
+    let top = data.result[0];
 
-  } catch (err) {
-    document.getElementById("result").innerText =
+    document.getElementById("result").innerText = "🧠 Prediction: " + top.label + "\n🎯 Confidence: " + (top.score * 100).toFixed(2) + "%";
+
+    catch (err) {
+      document.getElementById("result").innerText =
       "❌ Error: " + err.message;
-  }
+    }
 }
 </script>
 

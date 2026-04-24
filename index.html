@@ -1,23 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Search</title>
+<title>AI Image Search 🔥</title>
 
 <style>
 body {
-    font-family: Arial;
     background: #0f172a;
     color: white;
+    font-family: sans-serif;
     text-align: center;
-    padding: 40px;
 }
+
 .box {
-    background: #1e293b;
+    margin-top: 50px;
     padding: 30px;
     border-radius: 15px;
-    width: 300px;
-    margin: auto;
+    width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+    background: #1e293b;
 }
+
 button {
     background: #22c55e;
     border: none;
@@ -26,57 +29,94 @@ button {
     border-radius: 10px;
     cursor: pointer;
 }
+
+button:disabled {
+    background: gray;
+}
+
+img {
+    margin-top: 10px;
+    border-radius: 10px;
+}
 </style>
 
 </head>
+
 <body>
 
 <div class="box">
 <h2>AI Image Search 🔥</h2>
 
 <input type="file" id="file"><br><br>
-<button onclick="upload()">Upload</button>
+
+<img id="preview" width="200"/><br>
+
+<button id="btn" onclick="upload()">Upload</button>
 
 <p id="result"></p>
 </div>
 
 <script>
-const API = "https://payal-backend.onrender.com";
 
-async function upload() {
-  let file = document.getElementById("file").files[0];
+const API = "https://payal-backend.onrender.com/";
 
-  if (!file) {
-    alert("File select kar");
-    return;
-  }
-
-  let form = new FormData();
-  form.append("file", file);
-
-  document.getElementById("result").innerText = "⏳ Uploading...";
-
-  try {
-    let res = await fetch(API + "/search", {
-      method: "POST",
-      body: form
-    });
-
-    if (!res.ok) {
-      throw new Error("Server error: " + res.status);
-    }
-
-    let data = await res.json();
-
-    let top = data.result[0];
-
-    document.getElementById("result").innerText = "🧠 Prediction: " + top.label + "\n🎯 Confidence: " + (top.score * 100).toFixed(2) + "%";
-
-    catch (err) {
-      document.getElementById("result").innerText =
-      "❌ Error: " + err.message;
+document.getElementById("file").onchange = function(e){
+    let file = e.target.files[0];
+    if(file){
+        document.getElementById("preview").src = URL.createObjectURL(file);
     }
 }
+
+async function upload() {
+    let file = document.getElementById("file").files[0];
+
+    if (!file) {
+        alert("File select kar");
+        return;
+    }
+
+    let btn = document.getElementById("btn");
+    btn.disabled = true;
+
+    let form = new FormData();
+    form.append("file", file);
+
+    document.getElementById("result").innerText = "🔍 AI analysing...";
+
+    try {
+        let res = await fetch(API + "/search", {
+            method: "POST",
+            body: form
+        });
+
+        if (!res.ok) {
+            document.getElementById("result").innerText =
+                "❌ Server error: " + res.status;
+            btn.disabled = false;
+            return;
+        }
+
+        let data = await res.json();
+
+        if(data.error){
+            document.getElementById("result").innerText = "❌ " + data.error;
+            btn.disabled = false;
+            return;
+        }
+
+        let top = data.result[0];
+
+        document.getElementById("result").innerText =
+            "🧠 " + top.label + " (" + (top.score * 100).toFixed(2) + "%)";
+
+    } catch (err) {
+        document.getElementById("result").innerText =
+            "❌ Backend unreachable / CORS";
+    }
+
+    btn.disabled = false;
+}
+
 </script>
 
 </body>

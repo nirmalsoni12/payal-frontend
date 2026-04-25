@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>AI Image Search 🔥</title>
 
 <style>
 body {
     background: #0f172a;
     color: white;
-    font-family: sans-serif;
+    font-family: Arial;
     text-align: center;
 }
 
 .box {
-    margin-top: 50px;
+    margin-top: 80px;
+    background: #1e293b;
     padding: 30px;
     border-radius: 15px;
-    width: 320px;
+    width: 300px;
     margin-left: auto;
     margin-right: auto;
-    background: #1e293b;
 }
 
 button {
@@ -26,17 +27,8 @@ button {
     border: none;
     padding: 10px 20px;
     color: white;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
-}
-
-button:disabled {
-    background: gray;
-}
-
-img {
-    margin-top: 10px;
-    border-radius: 10px;
 }
 </style>
 
@@ -48,66 +40,57 @@ img {
 <h2>AI Image Search 🔥</h2>
 
 <input type="file" id="file"><br><br>
+<img id="preview" width="200"><br><br>
 
-<img id="preview" width="200"/><br>
-
-<button id="btn" onclick="upload()">Upload</button>
+<button onclick="upload()">Upload</button>
 
 <p id="result"></p>
 </div>
 
-
 <script>
-const API = "https://payal-backend.onrender.com";
+const API = "https://payal-backend.onrender.com"; // apna backend
+
+document.getElementById("file").onchange = function(e){
+    let file = e.target.files[0];
+    document.getElementById("preview").src = URL.createObjectURL(file);
+};
 
 async function upload() {
-  let file = document.getElementById("file").files[0];
+    let file = document.getElementById("file").files[0];
 
-  if (!file) {
-    alert("File select kar");
-    return;
-  }
-
-  let form = new FormData();
-  form.append("file", file);
-
-  document.getElementById("result").innerText = "⏳ Uploading...";
-
-  try {
-    let res = await fetch(API + "/search", {
-      method: "POST",
-      body: form
-    });
-
-    let text = await res.text();
-    let data;
-
-    try {
-      data = JSON.parse(text);
-      } 
-    catch {
-      document.getElementById("result").innerText = "❌ Server Error: " + text;
-      return;
-  }
-
-    // 🔥 SAFE CHECK
-    if (!data.result) {
-      document.getElementById("result").innerText =
-        "❌ API Error: " + (data.error || "No result");
-      return;
+    if (!file) {
+        alert("File select kar");
+        return;
     }
 
-    let top = data.result[0];
+    let form = new FormData();
+    form.append("file", file);
 
-    document.getElementById("result").innerText =
-      "🧠 Prediction: " + top.label;
+    document.getElementById("result").innerText = "⏳ Uploading...";
 
-  } catch (err) {
-    document.getElementById("result").innerText =
-      "❌ Error: " + err.message;
-  }
+    try {
+        let res = await fetch(API + "/search", {
+            method: "POST",
+            body: form
+        });
+
+        let data = await res.json();
+
+        if (data.error) {
+            document.getElementById("result").innerText = "❌ " + data.error;
+            return;
+        }
+
+        let top = data.result[0];
+
+        document.getElementById("result").innerText =
+            "🧠 Prediction: " + top.label + " (" + top.score + ")";
+    }
+    catch (err) {
+        document.getElementById("result").innerText = "❌ Error: " + err.message;
+    }
 }
-
 </script>
+
 </body>
 </html>

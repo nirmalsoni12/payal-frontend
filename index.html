@@ -56,46 +56,49 @@ img {
 <p id="result"></p>
 </div>
 
+
 <script>
-
-const API = "https://payal-backend.onrender.com/";
-
-document.getElementById("file").onchange = function(e){
-    let file = e.target.files[0];
-    if(file){
-        document.getElementById("preview").src = URL.createObjectURL(file);
-    }
-}
+const API = "https://payal-backend.onrender.com";
 
 async function upload() {
   let file = document.getElementById("file").files[0];
 
+  if (!file) {
+    alert("File select kar");
+    return;
+  }
+
   let form = new FormData();
   form.append("file", file);
+
+  document.getElementById("result").innerText = "⏳ Uploading...";
 
   try {
     let res = await fetch(API + "/search", {
       method: "POST",
-      body: form,
+      body: form
     });
 
-    console.log("STATUS:", res.status);   
-    let text = await res.text();         
-    console.log("RESPONSE:", text);       
+    let data = await res.json();
 
-    let data = JSON.parse(text);
+    // 🔥 SAFE CHECK
+    if (!data.result) {
+      document.getElementById("result").innerText =
+        "❌ API Error: " + (data.error || "No result");
+      return;
+    }
+
+    let top = data.result[0];
 
     document.getElementById("result").innerText =
-      "Prediction: " + data.result[0].label;
+      "🧠 Prediction: " + top.label;
 
   } catch (err) {
-    console.error("FETCH ERROR:", err);   
     document.getElementById("result").innerText =
-      "Error: " + err.message;
+      "❌ Error: " + err.message;
   }
 }
 
 </script>
-
 </body>
 </html>

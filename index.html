@@ -68,53 +68,31 @@ document.getElementById("file").onchange = function(e){
 }
 
 async function upload() {
-    let file = document.getElementById("file").files[0];
+  let file = document.getElementById("file").files[0];
 
-    if (!file) {
-        alert("File select kar");
-        return;
-    }
+  let form = new FormData();
+  form.append("file", file);
 
-    let btn = document.getElementById("btn");
-    btn.disabled = true;
+  try {
+    let res = await fetch(API + "/search", {
+      method: "POST",
+      body: form,
+    });
 
-    let form = new FormData();
-    form.append("file", file);
+    console.log("STATUS:", res.status);   
+    let text = await res.text();         
+    console.log("RESPONSE:", text);       
 
-    document.getElementById("result").innerText = "🔍 AI analysing...";
+    let data = JSON.parse(text);
 
-    try {
-        let res = await fetch(API + "/search", {
-            method: "POST",
-            body: form
-        });
+    document.getElementById("result").innerText =
+      "Prediction: " + data.result[0].label;
 
-        if (!res.ok) {
-            document.getElementById("result").innerText =
-                "❌ Server error: " + res.status;
-            btn.disabled = false;
-            return;
-        }
-
-        let data = await res.json();
-
-        if(data.error){
-            document.getElementById("result").innerText = "❌ " + data.error;
-            btn.disabled = false;
-            return;
-        }
-
-        let top = data.result[0];
-
-        document.getElementById("result").innerText =
-            "🧠 " + top.label + " (" + (top.score * 100).toFixed(2) + "%)";
-
-    } catch (err) {
-        document.getElementById("result").innerText =
-            "❌ Backend unreachable / CORS";
-    }
-
-    btn.disabled = false;
+  } catch (err) {
+    console.error("FETCH ERROR:", err);   
+    document.getElementById("result").innerText =
+      "Error: " + err.message;
+  }
 }
 
 </script>

@@ -1,64 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Jewellery Search 🔥</title>
+<title>AI Jewellery Search 🔥</title>
+
 <style>
-body { background:#0f172a; color:white; text-align:center; font-family:Arial; }
-.box { margin-top:50px; background:#1e293b; padding:20px; border-radius:15px; width:300px; margin:auto;}
-button { background:#22c55e; border:none; padding:10px; color:white; border-radius:8px;}
+body {
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.container {
+  margin-top: 50px;
+}
+
+.card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 15px;
+  width: 320px;
+  margin: auto;
+}
+
+button {
+  background: #22c55e;
+  border: none;
+  padding: 10px 20px;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+img {
+  margin-top: 10px;
+  border-radius: 10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="box">
-<h2>Add Item (Admin)</h2>
+<div class="container">
+
+<div class="card">
+<h2>🛒 Add Item</h2>
 
 <input type="file" id="file"><br><br>
-<input type="text" id="tag" placeholder="Tag No"><br><br>
-<input type="text" id="name" placeholder="Item Name"><br><br>
-<input type="number" id="qty" placeholder="Quantity"><br><br>
+<input type="text" id="tag" placeholder="Tag"><br><br>
+<input type="text" id="name" placeholder="Name"><br><br>
+<input type="number" id="qty" placeholder="Qty"><br><br>
 
-<button onclick="addItem()">Add Item</button>
+<button onclick="addItem()">Add</button>
+</div>
 
-<hr>
+<br>
 
-<h2>Search</h2>
+<div class="card">
+<h2>🔍 Search Item</h2>
+
 <input type="file" id="searchFile"><br><br>
+<img id="preview" width="200"><br><br>
+
 <button onclick="search()">Search</button>
 
 <p id="result"></p>
 </div>
 
+</div>
+
 <script>
 const API = "https://payal-backend.onrender.com";
 
+document.getElementById("searchFile").onchange = e => {
+    let file = e.target.files[0];
+    document.getElementById("preview").src = URL.createObjectURL(file);
+};
+
 async function addItem() {
-    let file = document.getElementById("file").files[0];
-    let tag = document.getElementById("tag").value;
-    let name = document.getElementById("name").value;
-    let qty = document.getElementById("qty").value;
-
     let form = new FormData();
-    form.append("file", file);
-    form.append("tag_no", tag);
-    form.append("name", name);
-    form.append("quantity", qty);
+    form.append("file", file.files[0]);
+    form.append("tag_no", tag.value);
+    form.append("name", name.value);
+    form.append("quantity", qty.value);
 
-    let res = await fetch(API + "/add-item", {
-        method: "POST",
-        body: form
-    });
+    await fetch(API + "/add-item", { method: "POST", body: form });
 
-    let data = await res.json();
-    alert("Item Added ✅");
+    alert("Added ✅");
 }
 
 async function search() {
-    let file = document.getElementById("searchFile").files[0];
-
     let form = new FormData();
-    form.append("file", file);
+    form.append("file", searchFile.files[0]);
 
     let res = await fetch(API + "/search", {
         method: "POST",
@@ -67,17 +101,11 @@ async function search() {
 
     let data = await res.json();
 
-    if (data.error) {
-        document.getElementById("result").innerText = data.error;
-        return;
-    }
-
-    let item = data.match;
-
-    document.getElementById("result").innerText =
-        "🔖 Tag: " + item.tag_no +
-        "\n📦 Qty: " + item.quantity +
-        "\n🧠 Name: " + item.name;
+    result.innerText =
+      "🔖 Tag: " + data.match.tag_no +
+      "\n📦 Qty: " + data.match.quantity +
+      "\n🧠 Name: " + data.match.name +
+      "\n📊 Similarity: " + data.similarity;
 }
 </script>
 

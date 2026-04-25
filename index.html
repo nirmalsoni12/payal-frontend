@@ -79,7 +79,16 @@ async function upload() {
       body: form
     });
 
-    let data = await res.json();
+    let text = await res.text();
+    let data;
+
+    try {
+      data = JSON.parse(text);
+      } 
+    catch {
+      document.getElementById("result").innerText = "❌ Server Error: " + text;
+      return;
+  }
 
     // 🔥 SAFE CHECK
     if (!data.result) {

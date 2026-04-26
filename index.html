@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Jewellery AI System</title>
+<title>Jewellery System</title>
 
 <style>
-body { background:#0f172a; color:white; text-align:center; font-family:sans-serif; }
-.card { background:#1e293b; padding:20px; border-radius:15px; width:300px; margin:20px auto; }
-button { background:#22c55e; border:none; padding:10px; color:white; border-radius:8px; }
+body { background:#0f172a; color:white; text-align:center; }
+.card { background:#1e293b; padding:20px; margin:20px auto; width:300px; border-radius:15px; }
+button { background:#22c55e; padding:10px; border:none; color:white; }
 </style>
 </head>
 
@@ -16,8 +16,7 @@ button { background:#22c55e; border:none; padding:10px; color:white; border-radi
 <h2>Add Item</h2>
 <input type="file" id="file"><br><br>
 <input type="text" id="name" placeholder="Name"><br><br>
-<input type="number" id="qty" placeholder="Quantity"><br><br>
-<button onclick="addItem()">Add</button>
+<button onclick="checkItem()">Check & Add</button>
 </div>
 
 <div class="card">
@@ -29,7 +28,7 @@ button { background:#22c55e; border:none; padding:10px; color:white; border-radi
 
 <div class="card">
 <h2>Sell</h2>
-<input type="text" id="sellTag" placeholder="Tag No"><br><br>
+<input type="text" id="sellTag" placeholder="Scan Tag"><br><br>
 <button onclick="sell()">Sell</button>
 <p id="sellResult"></p>
 </div>
@@ -37,19 +36,38 @@ button { background:#22c55e; border:none; padding:10px; color:white; border-radi
 <script>
 const API = "https://YOUR-BACKEND.onrender.com";
 
-async function addItem() {
+async function checkItem() {
     let form = new FormData();
     form.append("file", file.files[0]);
-    form.append("name", name.value);
-    form.append("quantity", qty.value);
 
-    let res = await fetch(API + "/add-item", { method:"POST", body:form });
+    let res = await fetch(API + "/check-item", { method:"POST", body:form });
     let data = await res.json();
 
-    alert("Tag: " + data.tag);
+    if (data.exists) {
+        alert("Already exists!\nQty: " + data.item.quantity);
+        return;
+    }
+
+    let qty = prompt("Enter quantity:");
+    let codes = [];
+
+    for(let i=0;i<qty;i++){
+        let c = prompt("Scan barcode " + (i+1));
+        codes.push(c);
+    }
+
+    let form2 = new FormData();
+    form2.append("file", file.files[0]);
+    form2.append("name", name.value);
+    form2.append("quantity", qty);
+    form2.append("barcodes", codes.join(","));
+
+    await fetch(API + "/add-item", { method:"POST", body:form2 });
+
+    alert("Added ✅");
 }
 
-async function search() {
+async function search(){
     let form = new FormData();
     form.append("file", searchFile.files[0]);
 
@@ -57,21 +75,19 @@ async function search() {
     let data = await res.json();
 
     result.innerText =
-        "Tag: " + data.match.tag_no +
-        "\nName: " + data.match.name +
-        "\nQty: " + data.match.quantity +
-        "\nSimilarity: " + data.similarity;
+      "Name: " + data.match.name +
+      "\nQty: " + data.match.quantity +
+      "\nSimilarity: " + data.similarity;
 }
 
-async function sell() {
+async function sell(){
     let form = new FormData();
     form.append("tag_no", sellTag.value);
 
     let res = await fetch(API + "/sell-item", { method:"POST", body:form });
     let data = await res.json();
 
-    sellResult.innerText =
-        data.msg ? "Remaining: " + data.remaining : data.error;
+    sellResult.innerText = data.msg ? data.remaining : data.error;
 }
 </script>
 

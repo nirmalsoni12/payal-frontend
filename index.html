@@ -1,111 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Jewellery Search 🔥</title>
+<title>Jewellery AI System</title>
 
 <style>
-body {
-  background: linear-gradient(135deg,#0f172a,#1e293b);
-  color: white;
-  font-family: sans-serif;
-  text-align: center;
-}
-
-.container {
-  margin-top: 50px;
-}
-
-.card {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: 15px;
-  width: 320px;
-  margin: auto;
-}
-
-button {
-  background: #22c55e;
-  border: none;
-  padding: 10px 20px;
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-img {
-  margin-top: 10px;
-  border-radius: 10px;
-}
+body { background:#0f172a; color:white; text-align:center; font-family:sans-serif; }
+.card { background:#1e293b; padding:20px; border-radius:15px; width:300px; margin:20px auto; }
+button { background:#22c55e; border:none; padding:10px; color:white; border-radius:8px; }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
 <div class="card">
-<h2>🛒 Add Item</h2>
-
+<h2>Add Item</h2>
 <input type="file" id="file"><br><br>
-<input type="text" id="tag" placeholder="Tag"><br><br>
 <input type="text" id="name" placeholder="Name"><br><br>
-<input type="number" id="qty" placeholder="Qty"><br><br>
-
+<input type="number" id="qty" placeholder="Quantity"><br><br>
 <button onclick="addItem()">Add</button>
 </div>
 
-<br>
-
 <div class="card">
-<h2>🔍 Search Item</h2>
-
+<h2>Search</h2>
 <input type="file" id="searchFile"><br><br>
-<img id="preview" width="200"><br><br>
-
 <button onclick="search()">Search</button>
-
 <p id="result"></p>
 </div>
 
+<div class="card">
+<h2>Sell</h2>
+<input type="text" id="sellTag" placeholder="Tag No"><br><br>
+<button onclick="sell()">Sell</button>
+<p id="sellResult"></p>
 </div>
 
 <script>
-const API = "https://payal-backend.onrender.com";
-
-document.getElementById("searchFile").onchange = e => {
-    let file = e.target.files[0];
-    document.getElementById("preview").src = URL.createObjectURL(file);
-};
+const API = "https://YOUR-BACKEND.onrender.com";
 
 async function addItem() {
     let form = new FormData();
     form.append("file", file.files[0]);
-    form.append("tag_no", tag.value);
     form.append("name", name.value);
     form.append("quantity", qty.value);
 
-    await fetch(API + "/add-item", { method: "POST", body: form });
+    let res = await fetch(API + "/add-item", { method:"POST", body:form });
+    let data = await res.json();
 
-    alert("Added ✅");
+    alert("Tag: " + data.tag);
 }
 
 async function search() {
     let form = new FormData();
     form.append("file", searchFile.files[0]);
 
-    let res = await fetch(API + "/search", {
-        method: "POST",
-        body: form
-    });
-
+    let res = await fetch(API + "/search", { method:"POST", body:form });
     let data = await res.json();
 
     result.innerText =
-      "🔖 Tag: " + data.match.tag_no +
-      "\n📦 Qty: " + data.match.quantity +
-      "\n🧠 Name: " + data.match.name +
-      "\n📊 Similarity: " + data.similarity;
+        "Tag: " + data.match.tag_no +
+        "\nName: " + data.match.name +
+        "\nQty: " + data.match.quantity +
+        "\nSimilarity: " + data.similarity;
+}
+
+async function sell() {
+    let form = new FormData();
+    form.append("tag_no", sellTag.value);
+
+    let res = await fetch(API + "/sell-item", { method:"POST", body:form });
+    let data = await res.json();
+
+    sellResult.innerText =
+        data.msg ? "Remaining: " + data.remaining : data.error;
 }
 </script>
 

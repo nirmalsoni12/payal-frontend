@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Phase 12 Jewellery System</title>
+<title>Phase 13 Jewellery System</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body { background:#0f172a; color:white; text-align:center; font-family:sans-serif; }
+body { background:#0f172a; color:white; text-align:center; }
 .card { background:#1e293b; padding:20px; margin:20px auto; width:320px; border-radius:15px; }
-button { background:#22c55e; padding:10px; border:none; color:white; border-radius:8px; }
+button { background:#22c55e; padding:10px; border:none; color:white; }
 </style>
 </head>
 
@@ -16,26 +18,22 @@ button { background:#22c55e; padding:10px; border:none; color:white; border-radi
 <h2>📦 Bulk Add</h2>
 
 <input type="file" id="file"><br><br>
-<input type="text" id="name" placeholder="Item Name"><br><br>
-<input type="number" id="qty" placeholder="Quantity"><br><br>
+<input type="text" id="name" placeholder="Name"><br><br>
+<input type="number" id="qty" placeholder="Qty"><br><br>
 
-<button onclick="startBulk()">Start Add</button>
-
-<p id="status"></p>
+<button onclick="startBulk()">Start</button>
 </div>
 
 <div class="card">
-<h2>🔍 Search</h2>
-<input type="file" id="searchFile"><br><br>
-<button onclick="search()">Search</button>
-<p id="result"></p>
+<h2>📷 Scan Barcode (Camera)</h2>
+<div id="reader" style="width:250px;"></div>
 </div>
 
 <div class="card">
-<h2>💰 Sell</h2>
-<input type="text" id="sellTag" placeholder="Scan Tag"><br><br>
-<button onclick="sell()">Sell</button>
-<p id="sellResult"></p>
+<h2>🖼 Scan From Photo</h2>
+<input type="file" id="photo"><br><br>
+<button onclick="scanPhoto()">Scan Photo</button>
+<p id="photoResult"></p>
 </div>
 
 <script>
@@ -47,17 +45,24 @@ async function startBulk(){
     let name = document.getElementById("name").value;
     let qty = parseInt(document.getElementById("qty").value);
 
-    if(!file || !qty){
-        alert("Fill all fields");
-        return;
-    }
-
     let codes=[];
+    let weightData={};
 
     for(let i=0;i<qty;i++){
         let code = prompt("Scan barcode "+(i+1));
-        if(!code){ i--; continue; }
+
+        let gross = prompt("Gross weight");
+        let net = prompt("Net weight");
+        let less = prompt("Less weight");
+
         codes.push(code);
+
+        weightData[code] = {
+            name:name,
+            gross:gross,
+            net:net,
+            less:less
+        };
     }
 
     let form=new FormData();
@@ -65,38 +70,57 @@ async function startBulk(){
     form.append("name",name);
     form.append("quantity",qty);
     form.append("barcodes",codes.join(","));
+    form.append("weights",JSON.stringify(weightData));
 
-    let res=await fetch(API+"/add-bulk",{method:"POST",body:form});
-    let data=await res.json();
+    await fetch(API+"/add-bulk",{method:"POST",body:form});
 
-    status.innerText = data.msg + " | " + data.design_id;
+    alert("Added ✅");
 }
 
-// ---------------- SEARCH ----------------
-async function search(){
-    let form=new FormData();
-    form.append("file",searchFile.files[0]);
+// ---------------- CAMERA SCAN ----------------
+function startCamera(){
+    const scanner = new Html5Qrcode("reader");
 
-    let res=await fetch(API+"/search",{method:"POST",body:form});
-    let data=await res.json();
+    scanner.start(
+        { facingMode:"environment" },
+        { fps:10, qrbox:200 },
+        async (text)=>{
 
-    result.innerText =
-        "Design: "+data.design+
-        "\nName: "+data.name+
-        "\nQty: "+data.qty+
-        "\nSimilarity: "+data.similarity;
+            let res = await fetch(API+"/get-barcode-info?code="+text);
+            let data = await res.json();
+
+            if(data.found){
+                alert(
+                    "Name: "+data.data.name+
+                    "\nGross: "+data.data.gross
+                );
+            }
+        },
+        ()=>{}
+    );
 }
+startCamera();
 
-// ---------------- SELL ----------------
-async function sell(){
-    let form=new FormData();
-    form.append("tag_no",sellTag.value);
+// ---------------- PHOTO SCAN ----------------
+async function scanPhoto(){
+    let file = document.getElementById("photo").files[0];
 
-    let res=await fetch(API+"/sell-item",{method:"POST",body:form});
-    let data=await res.json();
+    const scanner = new Html5Qrcode("reader");
 
-    sellResult.innerText =
-        data.msg ? data.remaining : data.error;
+    try{
+        let result = await scanner.scanFile(file,true);
+
+        let res = await fetch(API+"/get-barcode-info?code="+result);
+        let data = await res.json();
+
+        photoResult.innerText =
+            data.found ?
+            "Name: "+data.data.name+"\nGross:"+data.data.gross :
+            "Not found";
+
+    }catch(e){
+        alert("No barcode found");
+    }
 }
 </script>
 

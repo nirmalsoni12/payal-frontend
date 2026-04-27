@@ -1,168 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Jewellery System - Phase 11</title>
-
-<script src="https://unpkg.com/html5-qrcode"></script>
+<title>Phase 12 Jewellery System</title>
 
 <style>
 body { background:#0f172a; color:white; text-align:center; font-family:sans-serif; }
 .card { background:#1e293b; padding:20px; margin:20px auto; width:320px; border-radius:15px; }
-button { background:#22c55e; padding:10px; border:none; color:white; border-radius:8px; cursor:pointer; }
-#reader { width:260px; margin:auto; }
+button { background:#22c55e; padding:10px; border:none; color:white; border-radius:8px; }
 </style>
 </head>
 
 <body>
 
-<!-- ADD ITEM -->
 <div class="card">
-<h2>➕ Add Item</h2>
+<h2>📦 Bulk Add</h2>
 
 <input type="file" id="file"><br><br>
 <input type="text" id="name" placeholder="Item Name"><br><br>
+<input type="number" id="qty" placeholder="Quantity"><br><br>
 
-<button onclick="checkItem()">Check & Add</button>
+<button onclick="startBulk()">Start Add</button>
+
+<p id="status"></p>
 </div>
 
-<!-- SEARCH -->
 <div class="card">
-<h2>🔍 Search Item</h2>
-
+<h2>🔍 Search</h2>
 <input type="file" id="searchFile"><br><br>
 <button onclick="search()">Search</button>
-
 <p id="result"></p>
 </div>
 
-<!-- CAMERA SCAN SELL -->
 <div class="card">
-<h2>📷 Scan & Sell</h2>
-
-<div id="reader"></div>
-<br>
-
-<input type="text" id="sellTag" placeholder="Or Enter Tag"><br><br>
-<button onclick="sell()">Sell Manual</button>
-
+<h2>💰 Sell</h2>
+<input type="text" id="sellTag" placeholder="Scan Tag"><br><br>
+<button onclick="sell()">Sell</button>
 <p id="sellResult"></p>
 </div>
 
 <script>
-const API = "https://YOUR-BACKEND.onrender.com"; // ⚠️ change
+const API = "https://YOUR-BACKEND.onrender.com";
 
-// ---------------- ADD FLOW ----------------
-async function checkItem() {
-    let form = new FormData();
-    form.append("file", file.files[0]);
+// ---------------- BULK ADD ----------------
+async function startBulk(){
+    let file = document.getElementById("file").files[0];
+    let name = document.getElementById("name").value;
+    let qty = parseInt(document.getElementById("qty").value);
 
-    let res = await fetch(API + "/check-item", {
-        method:"POST",
-        body:form
-    });
-
-    let data = await res.json();
-
-    if (data.exists) {
-        alert("⚠️ Item already exists!\nQty: " + data.item.quantity);
+    if(!file || !qty){
+        alert("Fill all fields");
         return;
     }
 
-    let qty = prompt("Enter quantity:");
-    let codes = [];
+    let codes=[];
 
     for(let i=0;i<qty;i++){
-        let c = prompt("Scan barcode " + (i+1));
-        codes.push(c);
+        let code = prompt("Scan barcode "+(i+1));
+        if(!code){ i--; continue; }
+        codes.push(code);
     }
 
-    let form2 = new FormData();
-    form2.append("file", file.files[0]);
-    form2.append("name", name.value);
-    form2.append("quantity", qty);
-    form2.append("barcodes", codes.join(","));
+    let form=new FormData();
+    form.append("file",file);
+    form.append("name",name);
+    form.append("quantity",qty);
+    form.append("barcodes",codes.join(","));
 
-    await fetch(API + "/add-item", {
-        method:"POST",
-        body:form2
-    });
+    let res=await fetch(API+"/add-bulk",{method:"POST",body:form});
+    let data=await res.json();
 
-    alert("✅ Item Added");
+    status.innerText = data.msg + " | " + data.design_id;
 }
 
 // ---------------- SEARCH ----------------
 async function search(){
-    let form = new FormData();
-    form.append("file", searchFile.files[0]);
+    let form=new FormData();
+    form.append("file",searchFile.files[0]);
 
-    let res = await fetch(API + "/search", {
-        method:"POST",
-        body:form
-    });
-
-    let data = await res.json();
-
-    if(data.error){
-        result.innerText = data.error;
-        return;
-    }
+    let res=await fetch(API+"/search",{method:"POST",body:form});
+    let data=await res.json();
 
     result.innerText =
-        "🔖 Name: " + data.match.name +
-        "\n📦 Qty: " + data.match.quantity +
-        "\n📊 Similarity: " + data.similarity;
+        "Design: "+data.design+
+        "\nName: "+data.name+
+        "\nQty: "+data.qty+
+        "\nSimilarity: "+data.similarity;
 }
 
-// ---------------- SELL (API) ----------------
-async function sell(tagInput){
-    let tag = tagInput || sellTag.value;
+// ---------------- SELL ----------------
+async function sell(){
+    let form=new FormData();
+    form.append("tag_no",sellTag.value);
 
-    if(!tag){
-        alert("Scan or enter tag");
-        return;
-    }
-
-    let form = new FormData();
-    form.append("tag_no", tag);
-
-    let res = await fetch(API + "/sell-item", {
-        method:"POST",
-        body:form
-    });
-
-    let data = await res.json();
+    let res=await fetch(API+"/sell-item",{method:"POST",body:form});
+    let data=await res.json();
 
     sellResult.innerText =
-        data.msg ? 
-        "✅ Sold | Remaining: " + data.remaining :
-        "❌ " + data.error;
+        data.msg ? data.remaining : data.error;
 }
-
-// ---------------- CAMERA SCANNER ----------------
-function onScanSuccess(decodedText) {
-    console.log("Scanned:", decodedText);
-
-    // fill input
-    document.getElementById("sellTag").value = decodedText;
-
-    // auto sell
-    sell(decodedText);
-}
-
-function startScanner() {
-    const scanner = new Html5Qrcode("reader");
-
-    scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 200 },
-        onScanSuccess,
-        (err) => {}
-    );
-}
-
-// start camera
-startScanner();
-
 </script>
 
 </body>
